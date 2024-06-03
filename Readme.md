@@ -83,6 +83,8 @@ export const Order = mongoose.model("Order", orderSchema);
 - bcrypt is used to encrypt or decrypt sensitive data like password.
 - jsonwetoken is used for accesstoken and refreshtoken.
 - cookie parser is used to save or delete the cookies saved on the client browser.
+- Cloudinary is used to save the file and use the url to save in the db for user.
+- multer is used to handle the file uploads to external platforms.
 
 #### Models
 
