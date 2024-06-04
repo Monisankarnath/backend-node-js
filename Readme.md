@@ -94,3 +94,27 @@ export const Order = mongoose.model("Order", orderSchema);
 ```js
 userSchema.methods.generateAccessToken = function () {};
 ```
+
+#### Middleware
+
+- Can take upto 4 parameters in the callbacks - err, req, res, next. The 3 standard ones are req, res and next whereas the err parameter is used in error handling middlewares mostly.
+
+```js
+// error handling middle ware
+app.use((err, req, res, next) => {
+  res.status("500").json({ error: err.message });
+});
+
+// application handling middleware
+app.use((req, res, next) => {
+  console.log("Here comes all the code and logic");
+  next();
+});
+```
+
+- req(request) : query, params, headers, method, body, cookies, url
+- res(response) : send(), json(), status(), redirect(), cookies(), set(), render()
+- next(Next) :
+  - next() - passes the control to the next middleware
+  - next('route') - skips the remaining middleware in the current route and passes control to next route
+  - next('err') - passes the control to the next error middleware
