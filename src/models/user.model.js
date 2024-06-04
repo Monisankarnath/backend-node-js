@@ -53,7 +53,7 @@ const userSchema = new Schema(
 userSchema.pre("save", async function (next) {
   // have to use function cause arrow func dont have the instance of this
   if (!this.isModified("password")) return next(); // next will always need to be called after the middleware execution
-  this.password = bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
