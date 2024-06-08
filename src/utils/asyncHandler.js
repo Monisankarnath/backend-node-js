@@ -15,7 +15,11 @@ const asyncHandler = (requestHandler) => async (req, res, next) => {
       success: false,
       status: statusCode,
     };
-    if (error?.errors?.length === undefined) {
+    if (error.errors instanceof Array && error.errors.length) {
+    } else if (
+      error.errors instanceof Object &&
+      error.errors?.length == undefined
+    ) {
       jsonObject.errors = Object.values(error?.errors)?.map((err) => {
         const errorName = err?.path ? `${err.path} error` : err?.name;
         return { name: errorName, message: err.message };
