@@ -21,5 +21,19 @@ const uploadOnCloudinary = async (localFilePath) => {
     unlinkFiles([localFilePath]); // remove the locally saved temporary file as the upload operation failed
   }
 };
+const removeFromCloudinary = async (url) => {
+  try {
+    if (!url) return;
+    const splitUrl = url?.split("/");
+    const publicId = splitUrl[splitUrl?.length - 1];
+    // remove file from cloudinary
+    await cloudinary.uploader.destroy(publicId, {
+      invalidate: true,
+    });
+    console.log("Asset removed successfully = ", url);
+  } catch (error) {
+    console.log("Error in asset removal from cloudinary");
+  }
+};
 
-export { uploadOnCloudinary };
+export { uploadOnCloudinary, removeFromCloudinary };
