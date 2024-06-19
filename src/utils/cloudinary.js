@@ -25,12 +25,12 @@ const removeFromCloudinary = async (url) => {
   try {
     if (!url) return;
     const splitUrl = url?.split("/");
-    const publicId = splitUrl[splitUrl?.length - 1];
+    const publicId = splitUrl[splitUrl?.length - 1].split(".")[0];
     // remove file from cloudinary
-    await cloudinary.uploader.destroy(publicId, {
+    const result = await cloudinary.uploader.destroy(publicId, {
       invalidate: true,
     });
-    console.log("Asset removed successfully = ", url);
+    console.log("Cloudinary asset removal result =", result);
   } catch (error) {
     console.log("Error in asset removal from cloudinary");
   }

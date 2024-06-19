@@ -131,7 +131,8 @@ const loginUser = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     existedUser._id
   );
-
+  existedUser.refreshToken = refreshToken;
+  await existedUser.save({ validateBeforeSave: false });
   const loggedInUser = await User.findById(existedUser._id).select(
     "-password -refreshToken"
   );
@@ -159,7 +160,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: { refreshToken: undefined },
+      $unset: { refreshToken: 1 },
     },
     {
       new: true,
@@ -214,11 +215,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", newRefreshToken, options)
       .json(
-        new ApiResponse(200, {
-          accessToken: accessToken,
-          refreshToken: newRefreshToken,
-          message: "Access token refreshed",
-        })
+        new ApiResponse(
+          200,
+          {
+            accessToken: accessToken,
+            refreshToken: newRefreshToken,
+          },
+          "Access token refreshed"
+        )
       );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
@@ -262,7 +266,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).select("-password");
+  ).select("-password -refreshToken");
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Account details updated successfully"));
@@ -286,7 +290,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).select("-password");
+  ).select("-password -refreshToken");
   const oldAvatarUrl = req?.user?.avatar;
   if (oldAvatarUrl) {
     await removeFromCloudinary(oldAvatarUrl);
@@ -315,6 +319,10 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     },
     { new: true }
   ).select("-password");
+  const oldCoverImageUrl = req?.user?.coverImage;
+  if (oldCoverImageUrl) {
+    await removeFromCloudinary(oldCoverImageUrl);
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Cover Image updated successfully"));
