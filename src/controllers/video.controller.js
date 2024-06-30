@@ -41,7 +41,7 @@ const publishVideo = asyncHandler(async (req, res) => {
     videoFile: videoFileCloud?.url || "",
     duration: videoFileCloud?.duration,
     thumbnail: thumbnailCloud?.url || "",
-    owner: new mongoose.Types.ObjectId(req.user?._id),
+    owner: req.user?._id,
   });
   const createdVideo = await Video.findById(video._id);
   return res
