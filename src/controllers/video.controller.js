@@ -49,4 +49,63 @@ const publishVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdVideo, "Successfully uploaded."));
 });
 
-export { publishVideo };
+const getAllVideos = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    query,
+    sortBy = "updatedAt",
+    sortType = "desc",
+  } = req.query;
+
+  const userId = req.user?._id;
+  const filterQuery = { owner: userId };
+  if (query.length) {
+    const allQueries = query?.split(",");
+    allQueries.forEach((element) => {
+      const keyValue = element.split(":");
+      filterQuery[keyValue[0]] = { $regex: ".*" + keyValue[1] + ".*" };
+    });
+  }
+  const videos = await Video.find(filterQuery)
+    .limit(limit)
+    .skip((page - 1) * limit)
+    .sort({ [sortBy]: sortType });
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        videos,
+        "Successfully retrieved all videos of the user"
+      )
+    );
+});
+
+const getVideoById = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  //TODO: get video by id
+});
+
+const updateVideo = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  //TODO: update video details like title, description, thumbnail
+});
+
+const deleteVideo = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  //TODO: delete video
+});
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+});
+
+export {
+  publishVideo,
+  getAllVideos,
+  getVideoById,
+  updateVideo,
+  deleteVideo,
+  togglePublishStatus,
+};
