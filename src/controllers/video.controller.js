@@ -143,6 +143,33 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  const video = await Video.find({ _id: videoId, owner: req.user?._id });
+  if (video.length !== 1) {
+    throw new ApiError(
+      400,
+      "You are not authorized to update this video or there is no such video."
+    );
+  }
+  const publishedStatus = video[0].isPublished;
+  const videoData = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        isPublished: !publishedStatus,
+      },
+    },
+    { new: true }
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        videoData,
+        "Successfully updated the published status"
+      )
+    );
 });
 
 export {
