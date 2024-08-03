@@ -3,7 +3,10 @@ import { Video } from "../models/video.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  removeFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { unlinkFiles } from "../utils/unlinkFiles.js";
 
 const publishVideo = asyncHandler(async (req, res) => {
@@ -60,7 +63,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   const userId = req.user?._id;
   const filterQuery = { owner: userId };
-  if (query.length) {
+  if (query?.length) {
     const allQueries = query?.split(",");
     allQueries.forEach((element) => {
       const keyValue = element.split(":");
@@ -87,12 +90,50 @@ const getVideoById = asyncHandler(async (req, res) => {
   const video = await Video.find({ _id: videoId });
   return res
     .status(200)
-    .json(new ApiResponse(200, video, "Successfully retrieved the video"));
+    .json(new ApiResponse(200, video[0], "Successfully retrieved the video"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: update video details like title, description, thumbnail
+  const { title, description } = req.body;
+  const video = await Video.find({ _id: videoId, owner: req.user?._id });
+  if (video.length !== 1) {
+    throw new ApiError(
+      400,
+      "You are not authorized to update this video or there is no such video."
+    );
+  }
+  let thumbnailUrl = video[0]?.thumbnail;
+  let videoTitle = video[0]?.title;
+  let videoDescription = video[0]?.description;
+  let thumbnailLocalPath;
+  if (req?.file) {
+    thumbnailLocalPath = req?.file?.path;
+    await removeFromCloudinary(thumbnailUrl);
+    const newThumbnailCloud = await uploadOnCloudinary(thumbnailLocalPath);
+    thumbnailUrl = newThumbnailCloud?.url;
+  }
+  if (title) {
+    videoTitle = title;
+  }
+  if (description) {
+    videoDescription = description;
+  }
+  const videoData = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        title: videoTitle,
+        description: videoDescription,
+        thumbnail: thumbnailUrl,
+      },
+    },
+    { new: true }
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, videoData, "Successfully updated the video"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
