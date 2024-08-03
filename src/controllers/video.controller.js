@@ -84,7 +84,10 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: get video by id
+  const video = await Video.find({ _id: videoId });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "Successfully retrieved the video"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
