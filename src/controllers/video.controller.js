@@ -88,6 +88,9 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const video = await Video.find({ _id: videoId });
+  if (video?.length <= 0) {
+    throw new ApiError(400, "No such video found.");
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, video[0], "Successfully retrieved the video"));
@@ -138,7 +141,18 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: delete video
+  const video = await Video.find({ _id: videoId, owner: req.user?._id });
+  if (video.length === 1) {
+    await removeFromCloudinary(video[0]?.thumbnail);
+    await removeFromCloudinary(video[0]?.videoFile);
+  }
+  const vid = await Video.deleteOne({ _id: videoId, owner: req.user?._id });
+  if (vid.deletedCount === 0) {
+    throw new ApiError(400, "No such video found.");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, vid, "Successfully deleted the video"));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
